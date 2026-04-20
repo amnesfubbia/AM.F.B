@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>AM.F.B — Game Browser</title>
+<meta name="description" content="Jelajahi dunia game — trending, upcoming, koleksi, dan lebih.">
+<meta name="theme-color" content="#050810">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #090e1a;
+  --bg3: #0d1526;
+  --bg4: #121d35;
+  --card: #0d1526;
+  --card2: #111e38;
+  --border: #1a2a4a;
+  --border2: #1e3358;
+  --blue: #2563eb;
+  --blue2: #3b82f6;
+  --blue3: #60a5fa;
+  --blueglow: rgba(37,99,235,0.25);
+  --text: #f0f4ff;
+  --text2: #a8bcde;
+  --text3: #5a7aa8;
+  --text4: #2d4a72;
+  --accent: #2563eb;
+  --gold: #f59e0b;
+  --red: #ef4444;
+  --green: #22c55e;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;min-height:100vh;}
+
+/* ===== SPLASH ===== */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.splash-logo{font-family:'Rajdhani',sans-serif;font-size:48px;font-weight:700;letter-spacing:4px;color:#fff;}
+.splash-logo span{color:var(--blue2);}
+.splash-bar{width:160px;height:2px;background:var(--border);border-radius:99px;overflow:hidden;}
+.splash-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue3));border-radius:99px;animation:fillBar 1.2s ease forwards;}
+@keyframes fillBar{from{width:0}to{width:100%}}
+.splash-sub{font-size:11px;letter-spacing:3px;color:var(--text3);text-transform:uppercase;}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
+
+/* ===== TOPBAR ===== */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:1000;height:56px;background:rgba(5,8,16,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;}
+.topbar-back{width:36px;height:36px;display:none;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:18px;border-radius:10px;transition:all .2s;}
+.topbar-back:active{background:var(--bg3);}
+.topbar-back.show{display:flex;}
+.topbar-logo{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;letter-spacing:3px;color:#fff;cursor:pointer;flex-shrink:0;}
+.topbar-logo span{color:var(--blue2);}
+.topbar-breadcrumb{flex:1;display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;}
+.bc-item{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:color .2s;}
+.bc-item:hover{color:var(--text2);}
+.bc-item.active{color:var(--text);}
+.bc-sep{color:var(--text4);font-size:10px;flex-shrink:0;}
+.topbar-search-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:16px;border-radius:10px;transition:all .2s;flex-shrink:0;}
+.topbar-search-btn:active{background:var(--bg3);}
+
+/* ===== BOTTOM NAV ===== */
+#bottomNav{position:fixed;bottom:0;left:0;right:0;z-index:1000;height:60px;background:rgba(5,8,16,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 8px;padding-bottom:env(safe-area-inset-bottom);}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 12px;border-radius:12px;transition:all .2s;color:var(--text3);flex:1;}
+.nav-item i{font-size:18px;transition:all .2s;}
+.nav-item span{font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;}
+.nav-item.active{color:var(--blue2);}
+.nav-item.active i{transform:scale(1.1);}
+
+/* ===== MAIN CONTENT ===== */
+#app{padding-top:56px;padding-bottom:70px;}
+
+/* ===== VIEWS ===== */
+.view{display:none;}
+.view.active{display:block;}
+
+/* ===== HOME VIEW ===== */
+.hero-section{position:relative;height:260px;overflow:hidden;margin-bottom:24px;}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(0.4) saturate(1.2);}
+.hero-gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,8,16,0.2) 0%,rgba(5,8,16,0.7) 60%,var(--bg) 100%);}
+.hero-content{position:absolute;bottom:0;left:0;right:0;padding:20px 16px;}
+.hero-badge{display:inline-flex;align-items:center;gap:5px;background:var(--blue);color:#fff;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:8px;}
+.hero-title{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;line-height:1.1;margin-bottom:6px;text-shadow:0 2px 12px rgba(0,0,0,0.8);}
+.hero-meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);}
+.hero-rating{color:var(--gold);font-weight:700;}
+.hero-dots{position:absolute;top:12px;right:12px;display:flex;gap:5px;}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;transition:all .3s;}
+.hero-dot.active{background:#fff;width:18px;border-radius:3px;}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:14px;}
+.section-title{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;}
+.section-more{font-size:12px;color:var(--blue3);font-weight:600;cursor:pointer;}
+
+/* Horizontal scroll cards */
+.hscroll{display:flex;gap:12px;overflow-x:auto;padding:0 16px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.hscroll::-webkit-scrollbar{display:none;}
+
+.game-card-sm{flex:0 0 140px;cursor:pointer;transition:transform .2s;}
+.game-card-sm:active{transform:scale(0.95);}
+.game-card-sm .cover{width:140px;height:190px;border-radius:12px;overflow:hidden;background:var(--bg3);position:relative;margin-bottom:8px;border:1px solid var(--border);}
+.game-card-sm .cover img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s;}
+.game-card-sm .cover img.loaded{opacity:1;}
+.game-card-sm .badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;color:#fff;border:0.5px solid rgba(255,255,255,0.1);}
+.game-card-sm .badge.new{background:var(--blue);border-color:var(--blue);}
+.game-card-sm .badge.top{background:var(--gold);color:#000;border-color:var(--gold);}
+.game-card-sm .name{font-size:12px;font-weight:600;line-height:1.3;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.game-card-sm .rating{font-size:11px;color:var(--gold);font-weight:600;margin-top:2px;}
+
+/* Wide cards */
+.game-card-wide{display:flex;gap:12px;padding:12px 16px;cursor:pointer;transition:background .2s;border-bottom:1px solid var(--border);}
+.game-card-wide:active{background:var(--bg3);}
+.game-card-wide .cover{width:70px;height:95px;border-radius:10px;overflow:hidden;background:var(--bg3);flex-shrink:0;border:1px solid var(--border);}
+.game-card-wide .cover img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s;}
+.game-card-wide .cover img.loaded{opacity:1;}
+.game-card-wide .info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+.game-card-wide .name{font-size:14px;font-weight:600;line-height:1.3;color:var(--text);}
+.game-card-wide .meta{font-size:11px;color:var(--text3);}
+.game-card-wide .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.tag{background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:9px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;}
+.game-card-wide .rating-row{display:flex;align-items:center;gap:8px;}
+.game-card-wide .rating{font-size:12px;color:var(--gold);font-weight:700;}
+.game-card-wide .rank{font-size:20px;font-weight:700;color:var(--text4);font-family:'Rajdhani',sans-serif;width:28px;flex-shrink:0;text-align:center;}
+
+/* Grid cards */
+.game-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 16px;}
+.game-card-grid{cursor:pointer;transition:transform .2s;}
+.game-card-grid:active{transform:scale(0.97);}
+.game-card-grid .cover{width:100%;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:var(--bg3);position:relative;margin-bottom:8px;border:1px solid var(--border);}
+.game-card-grid .cover img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s;}
+.game-card-grid .cover img.loaded{opacity:1;}
+.game-card-grid .name{font-size:13px;font-weight:600;line-height:1.3;color:var(--text);}
+.game-card-grid .rating{font-size:11px;color:var(--gold);font-weight:600;margin-top:2px;}
+.game-card-grid .badge-abs{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;color:#fff;border:0.5px solid rgba(255,255,255,0.1);}
+
+/* ===== EXPLORE VIEW ===== */
+.explore-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:20px 16px;}
+.explore-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.explore-card:active{transform:scale(0.97);}
+.explore-card .ec-icon{font-size:28px;margin-bottom:10px;display:block;}
+.explore-card .ec-title{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;margin-bottom:3px;}
+.explore-card .ec-sub{font-size:11px;color:var(--text3);}
+.explore-card .ec-arrow{position:absolute;bottom:16px;right:16px;color:var(--text4);font-size:12px;}
+.explore-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 16px 0 60px;opacity:0.06;}
+.ec-blue::before{background:var(--blue);}
+.ec-gold::before{background:var(--gold);}
+.ec-green::before{background:var(--green);}
+.ec-red::before{background:var(--red);}
+
+/* ===== LIST VIEW (genre/platform/etc) ===== */
+.list-header{padding:20px 16px 12px;border-bottom:1px solid var(--border);margin-bottom:0;}
+.list-header-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px;}
+.list-header-sub{font-size:12px;color:var(--text3);}
+.chip-scroll{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.chip-scroll::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all .2s;}
+.chip.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.chip:active{transform:scale(0.95);}
+
+/* Sub-item list (genre items, platform items) */
+.sublist{padding:8px 0;}
+.sublist-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;transition:background .2s;border-bottom:1px solid var(--border);}
+.sublist-item:active{background:var(--bg3);}
+.sublist-item-left{display:flex;align-items:center;gap:12px;}
+.sublist-item-icon{width:40px;height:40px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.sublist-item-name{font-size:14px;font-weight:600;}
+.sublist-item-count{font-size:11px;color:var(--text3);margin-top:1px;}
+.sublist-item-right{display:flex;align-items:center;gap:8px;color:var(--text4);}
+.sublist-item-right i{font-size:12px;}
+
+/* ===== SEARCH VIEW ===== */
+.search-bar-wrap{padding:12px 16px;position:sticky;top:56px;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);}
+.search-bar{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 14px;}
+.search-bar input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;}
+.search-bar input::placeholder{color:var(--text3);}
+.search-bar i{color:var(--text3);font-size:16px;}
+.search-clear{color:var(--text3);font-size:14px;cursor:pointer;display:none;}
+
+.search-recent{padding:16px;}
+.search-recent-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
+.recent-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;margin:0 4px 8px 0;}
+.recent-chip i{font-size:10px;color:var(--text3);}
+
+/* ===== COLLECTION VIEW ===== */
+.coll-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);}
+.coll-tab{flex:1;text-align:center;padding:14px 0;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.coll-tab.active{color:var(--blue2);border-bottom-color:var(--blue2);}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:12px;}
+.empty-state i{font-size:48px;color:var(--text4);}
+.empty-state h3{font-size:16px;font-weight:700;color:var(--text2);}
+.empty-state p{font-size:13px;color:var(--text3);line-height:1.5;}
+
+/* ===== DETAIL VIEW ===== */
+.detail-hero{position:relative;height:280px;overflow:hidden;}
+.detail-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center top;filter:brightness(0.5) saturate(1.3);}
+.detail-hero-gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,8,16,0.1) 0%,rgba(5,8,16,0.5) 50%,var(--bg) 100%);}
+.detail-hero-content{position:absolute;bottom:0;left:0;right:0;padding:20px 16px;display:flex;gap:14px;align-items:flex-end;}
+.detail-cover{width:90px;height:120px;border-radius:12px;overflow:hidden;background:var(--bg3);flex-shrink:0;border:2px solid var(--border2);box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+.detail-cover img{width:100%;height:100%;object-fit:cover;}
+.detail-title-wrap{flex:1;min-width:0;}
+.detail-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,0.9);margin-bottom:6px;}
+.detail-meta-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.detail-badge{padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.db-rating{background:var(--gold);color:#000;}
+.db-release{background:var(--bg4);color:var(--text2);border:1px solid var(--border);}
+.db-platform{background:var(--bg4);color:var(--text2);border:1px solid var(--border);}
+
+.detail-actions{display:flex;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border);}
+.btn-action{flex:1;padding:11px;border-radius:12px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;transition:all .2s;border:none;font-family:'Inter',sans-serif;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:active{background:var(--blue2);}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:active{background:var(--bg4);}
+.btn-icon-act{width:44px;height:44px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text2);flex-shrink:0;transition:all .2s;}
+.btn-icon-act.active{background:rgba(239,68,68,0.15);border-color:var(--red);color:var(--red);}
+.btn-icon-act.active-bm{background:rgba(37,99,235,0.15);border-color:var(--blue);color:var(--blue2);}
+
+.detail-section{padding:16px;}
+.detail-section-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.detail-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.detail-desc{font-size:13px;color:var(--text2);line-height:1.6;}
+.detail-desc.collapsed{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.read-more{color:var(--blue3);font-size:12px;font-weight:600;cursor:pointer;display:block;margin-top:6px;}
+
+.detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.detail-info-item{padding:12px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+.detail-info-item:nth-child(2n){border-right:none;}
+.detail-info-item:nth-last-child(-n+2){border-bottom:none;}
+.detail-info-label{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:3px;}
+.detail-info-value{font-size:13px;color:var(--text);font-weight:500;}
+
+.rating-bar-wrap{margin-bottom:8px;}
+.rating-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px;}
+.rating-bar{height:4px;background:var(--border);border-radius:99px;overflow:hidden;}
+.rating-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--blue3));transition:width 1s ease;}
+
+.screenshots-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 16px 4px;scrollbar-width:none;}
+.screenshots-scroll::-webkit-scrollbar{display:none;}
+.screenshot-item{flex:0 0 220px;height:130px;border-radius:10px;overflow:hidden;background:var(--bg3);cursor:pointer;border:1px solid var(--border);}
+.screenshot-item img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s;}
+.screenshot-item img.loaded{opacity:1;}
+
+.similar-scroll{display:flex;gap:12px;overflow-x:auto;padding:0 16px 4px;scrollbar-width:none;}
+.similar-scroll::-webkit-scrollbar{display:none;}
+
+.platform-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.platform-tag{display:flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--text2);font-weight:500;}
+
+/* ===== CHART VIEW ===== */
+.chart-tabs{display:flex;gap:8px;overflow-x:auto;padding:16px;scrollbar-width:none;}
+.chart-tabs::-webkit-scrollbar{display:none;}
+.chart-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all .2s;}
+.chart-tab.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+/* ===== SPINNER ===== */
+.spinner-wrap{display:flex;justify-content:center;align-items:center;padding:40px;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue2);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== SEARCH OVERLAY ===== */
+#searchOverlay{display:none;position:fixed;inset:0;z-index:2000;background:var(--bg);padding-top:56px;overflow-y:auto;}
+.search-overlay-bar{position:fixed;top:0;left:0;right:0;z-index:2001;height:56px;background:rgba(5,8,16,0.95);backdrop-filter:blur(20px);display:flex;align-items:center;padding:0 12px;gap:10px;border-bottom:1px solid var(--border);}
+.search-overlay-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;}
+.search-overlay-cancel{font-size:13px;font-weight:600;color:var(--blue3);cursor:pointer;white-space:nowrap;}
+
+/* ===== IMAGE LIGHTBOX ===== */
+#lightbox{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.95);flex-direction:column;align-items:center;justify-content:center;}
+#lightbox img{max-width:100%;max-height:80vh;object-fit:contain;border-radius:8px;}
+#lightbox .lb-close{position:absolute;top:16px;right:16px;color:#fff;font-size:24px;cursor:pointer;}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .35s ease forwards;}
+
+/* ===== LOAD MORE ===== */
+.load-more-btn{display:block;width:calc(100% - 32px);margin:16px;padding:13px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;color:var(--text2);font-size:13px;font-weight:600;text-align:center;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;}
+.load-more-btn:active{background:var(--bg4);}
+
+/* ===== TOAST ===== */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg4);border:1px solid var(--border2);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:500;color:var(--text);z-index:9999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ===== DEVELOPER DETAIL ===== */
+.dev-header{padding:20px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
+.dev-avatar{width:64px;height:64px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.dev-name{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;}
+.dev-meta{font-size:12px;color:var(--text3);margin-top:2px;}
+
+/* ===== COMPARE ===== */
+.compare-banner{margin:16px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px;display:none;}
+.compare-banner.show{display:flex;align-items:center;gap:10px;}
+.compare-banner-text{flex:1;font-size:12px;color:var(--text2);}
+.compare-btn-do{padding:7px 14px;background:var(--blue);color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* no scrollbar util */
+.no-sb{scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.no-sb::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">AM<span>.</span>F<span>.</span>B</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+  <div class="splash-sub">Game Browser</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <div class="lb-close"><i class="fa-solid fa-xmark"></i></div>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="topbar-back" id="topbarBack" onclick="navigateBack()"><i class="fa-solid fa-chevron-left"></i></div>
+  <div class="topbar-logo" onclick="goHome()">AM<span>.</span>F<span>.</span>B</div>
+  <div class="topbar-breadcrumb" id="breadcrumb"></div>
+  <div class="topbar-search-btn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></div>
+</div>
+
+<!-- SEARCH OVERLAY -->
+<div id="searchOverlay">
+  <div class="search-overlay-bar">
+    <input class="search-overlay-input" id="searchInput" placeholder="Cari game, developer, publisher..." autocomplete="off">
+    <div class="search-overlay-cancel" onclick="closeSearch()">Batal</div>
+  </div>
+  <div id="searchContent" style="padding-top:8px;"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- HOME VIEW -->
+  <div class="view active" id="viewHome">
+    <div class="hero-section" id="heroSection">
+      <div class="hero-bg" id="heroBg"></div>
+      <div class="hero-gradient"></div>
+      <div class="hero-content">
+        <div class="hero-badge"><i class="fa-solid fa-fire"></i> Trending</div>
+        <div class="hero-title" id="heroTitle">Memuat...</div>
+        <div class="hero-meta">
+          <span class="hero-rating" id="heroRating"></span>
+          <span id="heroGenre" style="color:var(--text3)"></span>
+        </div>
+      </div>
+      <div class="hero-dots" id="heroDots"></div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">🔥 Trending</div>
+      <div class="section-more" onclick="goToChart('week')">Lihat semua</div>
+    </div>
+    <div class="hscroll" id="trendingScroll"></div>
+
+    <div style="height:24px"></div>
+    <div class="section-header">
+      <div class="section-title">⭐ Top Rating</div>
+      <div class="section-more" onclick="goToChart('all')">Lihat semua</div>
+    </div>
+    <div id="topRatedList"></div>
+
+    <div style="height:24px"></div>
+    <div class="section-header">
+      <div class="section-title">🆕 Baru Dirilis</div>
+      <div class="section-more" onclick="goExploreSection('new')">Lihat semua</div>
+    </div>
+    <div class="hscroll" id="newReleasesScroll"></div>
+
+    <div style="height:24px"></div>
+    <div class="section-header">
+      <div class="section-title">📅 Akan Datang</div>
+      <div class="section-more" onclick="goExploreSection('upcoming')">Lihat semua</div>
+    </div>
+    <div class="hscroll" id="upcomingScroll"></div>
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- EXPLORE VIEW -->
+  <div class="view" id="viewExplore">
+    <div id="exploreContent"></div>
+  </div>
+
+  <!-- CHART VIEW -->
+  <div class="view" id="viewChart">
+    <div class="chart-tabs" id="chartTabs">
+      <div class="chart-tab active" onclick="loadChart('week',this)">Minggu Ini</div>
+      <div class="chart-tab" onclick="loadChart('month',this)">Bulan Ini</div>
+      <div class="chart-tab" onclick="loadChart('all',this)">Sepanjang Masa</div>
+    </div>
+    <div id="chartList"></div>
+  </div>
+
+  <!-- COLLECTION VIEW -->
+  <div class="view" id="viewCollection">
+    <div class="coll-tabs">
+      <div class="coll-tab active" onclick="switchCollTab('wishlist',this)">Wishlist</div>
+      <div class="coll-tab" onclick="switchCollTab('playing',this)">Sedang Main</div>
+      <div class="coll-tab" onclick="switchCollTab('played',this)">Sudah Main</div>
+      <div class="coll-tab" onclick="switchCollTab('fav',this)">Favorit</div>
+    </div>
+    <div id="collContent"></div>
+  </div>
+
+  <!-- DETAIL VIEW (dynamic) -->
+  <div class="view" id="viewDetail"></div>
+
+  <!-- SUBLIST VIEW (genre/platform list) -->
+  <div class="view" id="viewSublist"></div>
+
+  <!-- GAMELIST VIEW (games in genre/platform) -->
+  <div class="view" id="viewGamelist"></div>
+
+  <!-- DEVELOPER VIEW -->
+  <div class="view" id="viewDeveloper"></div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottomNav">
+  <div class="nav-item active" id="navHome" onclick="switchNav('home')">
+    <i class="fa-solid fa-house"></i><span>Home</span>
+  </div>
+  <div class="nav-item" id="navExplore" onclick="switchNav('explore')">
+    <i class="fa-solid fa-compass"></i><span>Jelajahi</span>
+  </div>
+  <div class="nav-item" id="navChart" onclick="switchNav('chart')">
+    <i class="fa-solid fa-chart-line"></i><span>Tangga</span>
+  </div>
+  <div class="nav-item" id="navCollection" onclick="switchNav('collection')">
+    <i class="fa-regular fa-bookmark"></i><span>Koleksi</span>
+  </div>
+</nav>
+
+<script>
+const API = 'f44bed6e2a4340c8a56fd39bb0a220f1';
+const BASE = 'https://api.rawg.io/api';
+
+// ===== STATE =====
+let navStack = []; // history stack: [{view, data, title}]
+let currentView = 'home';
+let heroGames = [];
+let heroIdx = 0;
+let heroTimer = null;
+let searchTimer = null;
+let recentSearches = JSON.parse(localStorage.getItem('amfb_recent') || '[]');
+let collTab = 'wishlist';
+let chartPeriod = 'week';
+let chartPage = 1;
+let chartLoading = false;
+let gamelistPage = 1;
+let gamelistLoading = false;
+let gamelistParams = {};
+let compareGame = null;
+
+// ===== CACHE =====
+const cache = {};
+async function apiFetch(url) {
+  if (cache[url]) return cache[url];
+  const res = await fetch(url);
+  const data = await res.json();
+  cache[url] = data;
+  return data;
+}
+
+// ===== INIT =====
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('splash').style.opacity = '0';
+    document.getElementById('splash').style.transition = 'opacity 0.4s';
+    setTimeout(() => document.getElementById('splash').style.display = 'none', 400);
+    initHome();
+  }, 1500);
+  window.addEventListener('popstate', handlePopState);
+  document.getElementById('searchInput').addEventListener('input', handleSearchInput);
+  history.replaceState({idx: 0, view: 'home'}, '');
+});
+
+// ===== NAVIGATION =====
+function pushState(view, data = {}, title = '') {
+  navStack.push({view, data, title});
+  history.pushState({idx: navStack.length, view, data, title}, '');
+  updateTopbar(title);
+  updateBreadcrumb();
+}
+
+function handlePopState(e) {
+  if (document.getElementById('searchOverlay').style.display === 'block') {
+    closeSearch(); return;
+  }
+  if (document.getElementById('lightbox').style.display === 'flex') {
+    closeLightbox(); return;
+  }
+  if (navStack.length === 0) return;
+  navStack.pop();
+  if (navStack.length === 0) {
+    showView('home'); currentView = 'home';
+    updateTopbar(''); updateBreadcrumb();
+    updateNavActive('home');
+  } else {
+    const prev = navStack[navStack.length - 1];
+    restoreView(prev);
+  }
+}
+
+function navigateBack() {
+  history.back();
+}
+
+function restoreView(item) {
+  const {view, data, title} = item;
+  currentView = view;
+  updateTopbar(title);
+  updateBreadcrumb();
+  switch(view) {
+    case 'home': showView('home'); updateNavActive('home'); break;
+    case 'explore': showView('explore'); updateNavActive('explore'); break;
+    case 'chart': showView('chart'); updateNavActive('chart'); break;
+    case 'collection': showView('collection'); updateNavActive('collection'); break;
+    case 'sublist': showView('sublist'); break;
+    case 'gamelist': showView('gamelist'); break;
+    case 'detail': showView('detail'); break;
+    case 'developer': showView('developer'); break;
+  }
+}
+
+function goHome() {
+  navStack = [];
+  history.replaceState({idx: 0, view: 'home'}, '');
+  showView('home'); currentView = 'home';
+  updateTopbar(''); updateBreadcrumb();
+  updateNavActive('home');
+}
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+}
+
+function updateTopbar(title) {
+  const back = document.getElementById('topbarBack');
+  if (navStack.length > 0) back.classList.add('show'); else back.classList.remove('show');
+}
+
+function updateBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  if (navStack.length === 0) { bc.innerHTML = ''; return; }
+  const items = navStack.map((s, i) => {
+    const isLast = i === navStack.length - 1;
+    return `<span class="bc-item ${isLast ? 'active' : ''}" onclick="jumpBreadcrumb(${i})">${s.title || '...'}</span>${!isLast ? '<span class="bc-sep"><i class="fa-solid fa-chevron-right"></i></span>' : ''}`;
+  });
+  bc.innerHTML = items.join('');
+}
+
+function jumpBreadcrumb(idx) {
+  const steps = navStack.length - 1 - idx;
+  for (let i = 0; i < steps; i++) history.back();
+}
+
+function switchNav(name) {
+  updateNavActive(name);
+  navStack = [];
+  history.replaceState({idx: 0, view: name}, '');
+  updateTopbar(''); updateBreadcrumb();
+  switch(name) {
+    case 'home': showView('home'); initHome(); break;
+    case 'explore': showView('explore'); initExplore(); break;
+    case 'chart': showView('chart'); initChart(); break;
+    case 'collection': showView('collection'); initCollection(); break;
+  }
+}
+
+function updateNavActive(name) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('nav' + name.charAt(0).toUpperCase() + name.slice(1));
+  if (el) el.classList.add('active');
+}
+
+// ===== HOME =====
+async function initHome() {
+  loadHero();
+  loadTrending();
+  loadTopRated();
+  loadNewReleases();
+  loadUpcoming();
+}
+
+async function loadHero() {
+  const data = await apiFetch(`${BASE}/games?key=${API}&ordering=-rating&page_size=5&metacritic=80,100`);
+  heroGames = (data.results || []).filter(g => g.background_image);
+  if (!heroGames.length) return;
+  renderHero(0);
+  const dots = document.getElementById('heroDots');
+  dots.innerHTML = heroGames.slice(0, 5).map((_, i) =>
+    `<div class="hero-dot ${i===0?'active':''}" onclick="renderHero(${i})"></div>`
+  ).join('');
+  clearInterval(heroTimer);
+  heroTimer = setInterval(() => {
+    heroIdx = (heroIdx + 1) % Math.min(heroGames.length, 5);
+    renderHero(heroIdx);
+  }, 4000);
+}
+
+function renderHero(idx) {
+  heroIdx = idx;
+  const g = heroGames[idx];
+  document.getElementById('heroBg').style.backgroundImage = `url('${g.background_image}')`;
+  document.getElementById('heroTitle').textContent = g.name;
+  document.getElementById('heroRating').textContent = g.rating ? `★ ${g.rating.toFixed(1)}` : '';
+  document.getElementById('heroGenre').textContent = (g.genres || []).slice(0,2).map(x=>x.name).join(' · ');
+  document.querySelectorAll('.hero-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+  document.getElementById('heroSection').onclick = () => openDetail(g.id, g.name);
+}
+
+async function loadTrending() {
+  const el = document.getElementById('trendingScroll');
+  el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  const data = await apiFetch(`${BASE}/games?key=${API}&ordering=-added&page_size=10&dates=${getDateRange(30)}`);
+  el.innerHTML = '';
+  (data.results || []).forEach((g, i) => {
+    el.appendChild(makeCardSm(g, i < 3 ? 'new' : null));
+  });
+}
+
+async function loadTopRated() {
+  const el = document.getElementById('topRatedList');
+  el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  const data = await apiFetch(`${BASE}/games?key=${API}&ordering=-rating&page_size=5&metacritic=85,100`);
+  el.innerHTML = '';
+  (data.results || []).forEach((g, i) => {
+    el.appendChild(makeCardWide(g, i + 1));
+  });
+}
+
+async function loadNewReleases() {
+  const el = document.getElementById('newReleasesScroll');
+  el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  const data = await apiFetch(`${BASE}/games?key=${API}&ordering=-released&page_size=10&dates=${getDateRange(90)}`);
+  el.innerHTML = '';
+  (data.results || []).forEach(g => el.appendChild(makeCardSm(g)));
+}
+
+async function loadUpcoming() {
+  const el = document.getElementById('upcomingScroll');
+  el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  const today = new Date().toISOString().split('T')[0];
+  const future = new Date(Date.now() + 180*86400000).toISOString().split('T')[0];
+  const data = await apiFetch(`${BASE}/games?key=${API}&ordering=-added&page_size=10&dates=${today},${future}`);
+  el.innerHTML = '';
+  (data.results || []).forEach(g => el.appendChild(makeCardSm(g, 'top')));
+}
+
+function getDateRange(days) {
+  const end = new Date().toISOString().split('T')[0];
+  const start = new Date(Date.now() - days*86400000).toISOString().split('T')[0];
+  return `${start},${end}`;
+}
+
+// ===== CARD FACTORIES =====
+function makeCardSm(g, badge = null) {
+  const div = document.createElement('div');
+  div.className = 'game-card-sm fade-up';
+  div.onclick = () => openDetail(g.id, g.name);
+  const badgeHTML = badge ? `<div class="badge ${badge}">${badge === 'new' ? 'NEW' : badge === 'top' ? '★' : badge}</div>` : '';
+  div.innerHTML = `
+    <div class="cover">
+      ${badgeHTML}
+      <img src="${g.background_image || ''}" alt="${g.name}" onload="this.classList.add('loaded')">
+    </div>
+    <div class="name">${g.name}</div>
+    <div class="rating">${g.rating ? '★ ' + g.rating.toFixed(1) : 'TBA'}</div>`;
+  return div;
+}
+
+function makeCardWide(g, rank = null) {
+  const div = document.createElement('div');
+  div.className = 'game-card-wide fade-up';
+  div.onclick = () => openDetail(g.id, g.name);
+  const tags = (g.genres || []).slice(0,2).map(t => `<span class="tag">${t.name}</span>`).join('');
+  div.innerHTML = `
+    ${rank ? `<div class="rank">${rank}</div>` : ''}
+    <div class="cover"><img src="${g.background_image || ''}" alt="${g.name}" onload="this.classList.add('loaded')"></div>
+    <div class="info">
+      <div class="name">${g.name}</div>
+      <div class="meta">${g.released || 'TBA'}</div>
+      <div class="tags">${tags}</div>
+      <div class="rating-row"><span class="rating">${g.rating ? '★ ' + g.rating.toFixed(1) : '—'}</span></div>
+    </div>`;
+  return div;
+}
+
+function makeCardGrid(g) {
+  const div = document.createElement('div');
+  div.className = 'game-card-grid fade-up';
+  div.onclick = () => openDetail(g.id, g.name);
+  div.innerHTML = `
+    <div class="cover">
+      <img src="${g.background_image || ''}" alt="${g.name}" onload="this.classList.add('loaded')">
+      <div class="badge-abs">${g.rating ? '★ ' + g.rating.toFixed(1) : 'TBA'}</div>
+    </div>
+    <div class="name">${g.name}</div>
+    <div class="rating">${(g.genres || []).slice(0,1).map(x=>x.name).join('')}</div>`;
+  return div;
+}
+
+// ===== EXPLORE =====
+function initExplore() {
+  const el = document.getElementById('exploreContent');
+  el.innerHTML = `
+    <div style="padding:20px 16px 12px">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;margin-bottom:4px">Jelajahi</div>
+      <div style="font-size:13px;color:var(--text3)">Temukan game berdasarkan kategori, platform, dan lebih</div>
+    </div>
+    <div class="explore-grid">
+      <div class="explore-card ec-blue" onclick="goExploreSection('genre')">
+        <span class="ec-icon">🎮</span>
+        <div class="ec-title">Genre</div>
+        <div class="ec-sub">Action, RPG, Horror...</div>
+        <i class="fa-solid fa-chevron-right ec-arrow"></i>
+      </div>
+      <div class="explore-card ec-gold" onclick="goExploreSection('platform')">
+        <span class="ec-icon">🖥️</span>
+        <div class="ec-title">Platform</div>
+        <div class="ec-sub">PC, PlayStation, Xbox...</div>
+        <i class="fa-solid fa-chevron-right ec-arrow"></i>
+      </div>
+      <div class="explore-card ec-green" onclick="goExploreSection('developer')">
+        <span class="ec-icon">🏢</span>
+        <div class="ec-title">Developer</div>
+        <div class="ec-sub">Rockstar, Nintendo...</div>
+        <i class="fa-solid fa-chevron-right ec-arrow"></i>
+      </div>
+      <div class="explore-card ec-red" onclick="goExploreSection('year')">
+        <span class="ec-icon">📅</span>
+        <div class="ec-title">Tahun Rilis</div>
+        <div class="ec-sub">2025, 2024, 2023...</div>
+        <i class="fa-solid fa-chevron-right ec-arrow"></i>
+      </div>
+      <div class="explore-card ec-blue" onclick="goExploreSection('new')" style="grid-column:span 1">
+        <span class="ec-icon">🆕</span>
+        <div class="ec-title">Baru Dirilis</div>
+        <div class="ec-sub">3 bulan terakhir</div>
+        <i class="fa-solid fa-chevron-right ec-arrow"></i>
+      </div>
+      <div class="explore-card ec-gold" onclick="goExploreSection('upcoming')" style="grid-column:span 1">
+        <span class="ec-icon">🚀</span>
+        <div class="ec-title">Akan Datang</div>
+        <div class="ec-sub">Game mendatang</div>
+        <i class="fa-solid fa-chevron-right ec-arrow"></i>
+      </div>
+      <div class="explore-card ec-green" onclick="goExploreSection('random')" style="grid-column:span 2">
+        <span class="ec-icon">🎲</span>
+        <div class="ec-title">Game Acak</div>
+        <div class="ec-sub">Bingung mau main apa? Biar kami pilihkan!</div>
+        <i class="fa-solid fa-chevron-right ec-arrow"></i>
+      </div>
+    </div>`;
+}
+
+async function goExploreSection(section) {
+  const sectionNames = {
+    genre: 'Genre', platform: 'Platform', developer: 'Developer',
+    year: 'Tahun Rilis', new: 'Baru Dirilis', upcoming: 'Akan Datang', random: 'Game Acak'
+  };
+  pushState('sublist', {section}, sectionNames[section] || section);
+  showView('sublist');
+  const el = document.getElementById('viewSublist');
+  el.innerHTML = `<div class="list-header"><div class="list-header-title">${sectionNames[section]}</div></div><div class="spinner-wrap"><div class="spinner"></div></div>`;
+
+  if (section === 'random') {
+    const page = Math.floor(Math.random() * 20) + 1;
+    const data = await apiFetch(`${BASE}/games?key=${API}&page=${page}&page_size=20&ordering=-rating`);
+    const games = data.results || [];
+    const g = games[Math.floor(Math.random() * games.length)];
+    if (g) { el.innerHTML = ''; openDetail(g.id, g.name); return; }
+  }
+
+  if (section === 'new' || section === 'upcoming') {
+    el.innerHTML = `<div class="list-header"><div class="list-header-title">${sectionNames[section]}</div></div>`;
+    await loadGamelist({section}, el, true);
+    return;
+  }
+
+  if (section === 'year') {
+    const years = [];
+    for (let y = 2025; y >= 1990; y--) years.push(y);
+    el.innerHTML = `
+      <div class="list-header"><div class="list-header-title">Tahun Rilis</div></div>
+      <div class="sublist">${years.map(y => `
+        <div class="sublist-item" onclick="goGamelist({year:'${y}'},'Game ${y}')">
+          <div class="sublist-item-left">
+            <div class="sublist-item-icon">📅</div>
+            <div><div class="sublist-item-name">${y}</div><div class="sublist-item-count">Rilis tahun ${y}</div></div>
+          </div>
+          <div class="sublist-item-right"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>`).join('')}
+      </div>`;
+    return;
+  }
+
+  const urls = {
+    genre: `${BASE}/genres?key=${API}&page_size=40`,
+    platform: `${BASE}/platforms/lists/parents?key=${API}`,
+    developer: `${BASE}/developers?key=${API}&page_size=40`
+  };
+  const icons = {
+    genre: {Action:'⚔️',RPG:'🧙',Shooter:'🔫',Strategy:'♟️',Simulation:'🏗️',Puzzle:'🧩',Racing:'🏎️',Sports:'⚽',Adventure:'🗺️',Indie:'🎨',Fighting:'🥊',Platformer:'🏃',Horror:'👻',default:'🎮'},
+    platform: {PC:'🖥️',PlayStation:'🎮',Xbox:'🟢','Nintendo Switch':'🔴',iOS:'📱',Android:'📲',default:'🕹️'},
+    developer: {default:'🏢'}
+  };
+  const data = await apiFetch(urls[section]);
+  const items = data.results || [];
+  const iconMap = icons[section] || {};
+  const getIcon = name => iconMap[name] || iconMap.default || '🎮';
+
+  el.innerHTML = `
+    <div class="list-header"><div class="list-header-title">${sectionNames[section]}</div><div class="list-header-sub">${items.length} tersedia</div></div>
+    <div class="sublist">${items.map(item => `
+      <div class="sublist-item" onclick="goGamelist({${section==='genre'?'genres':'platforms'}:'${item.id}',${section==='developer'?'developers:\''+item.slug+'\',':''}name:'${escHtml(item.name)}'},'${escHtml(item.name)}')">
+        <div class="sublist-item-left">
+          <div class="sublist-item-icon">${getIcon(item.name)}</div>
+          <div>
+            <div class="sublist-item-name">${item.name}</div>
+            <div class="sublist-item-count">${item.games_count ? item.games_count.toLocaleString() + ' game' : ''}</div>
+          </div>
+        </div>
+        <div class="sublist-item-right"><i class="fa-solid fa-chevron-right"></i></div>
+      </div>`).join('')}
+    </div>`;
+}
+
+async function goGamelist(params, title) {
+  // params: {genres, platforms, year, section, developers, name}
+  gamelistPage = 1;
+  gamelistLoading = false;
+  gamelistParams = params;
+  pushState('gamelist', params, title || params.name || 'Game');
+  showView('gamelist');
+  const el = document.getElementById('viewGamelist');
+  el.innerHTML = `
+    <div class="list-header"><div class="list-header-title">${title || params.name || 'Game'}</div></div>
+    <div class="chip-scroll" id="gamelistFilter">
+      <div class="chip active" onclick="sortGamelist('-rating',this)">Top Rating</div>
+      <div class="chip" onclick="sortGamelist('-added',this)">Terpopuler</div>
+      <div class="chip" onclick="sortGamelist('-released',this)">Terbaru</div>
+      <div class="chip" onclick="sortGamelist('name',this)">A-Z</div>
+    </div>
+    <div class="game-grid" id="gamelistGrid"></div>
+    <div id="gamelistMore"></div>`;
+  await loadGamelist(params, el, true);
+}
+
+async function loadGamelist(params, elCtx, isNew = false) {
+  if (gamelistLoading) return;
+  gamelistLoading = true;
+  if (isNew) gamelistPage = 1;
+  const grid = document.getElementById('gamelistGrid');
+  const moreEl = document.getElementById('gamelistMore');
+  if (isNew && grid) grid.innerHTML = '';
+  if (moreEl) moreEl.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+  let url = `${BASE}/games?key=${API}&page=${gamelistPage}&page_size=20&ordering=${params.ordering || '-rating'}`;
+  if (params.genres) url += `&genres=${params.genres}`;
+  if (params.platforms) url += `&parent_platforms=${params.platforms}`;
+  if (params.year) url += `&dates=${params.year}-01-01,${params.year}-12-31`;
+  if (params.developers) url += `&developers=${params.developers}`;
+  if (params.section === 'new') url += `&dates=${getDateRange(90)}`;
+  if (params.section === 'upcoming') {
+    const today = new Date().toISOString().split('T')[0];
+    const fut = new Date(Date.now()+365*86400000).toISOString().split('T')[0];
+    url += `&dates=${today},${fut}&ordering=-added`;
+  }
+
+  try {
+    const data = await apiFetch(url);
+    const items = data.results || [];
+    const targetGrid = document.getElementById('gamelistGrid') || elCtx;
+
+    if (!document.getElementById('gamelistGrid') && isNew) {
+      elCtx.innerHTML = `<div class="list-header"><div class="list-header-title">${params.section === 'new' ? 'Baru Dirilis' : 'Akan Datang'}</div></div><div class="game-grid" id="gamelistGrid"></div><div id="gamelistMore"></div>`;
+    }
+
+    const finalGrid = document.getElementById('gamelistGrid');
+    const frag = document.createDocumentFragment();
+    items.forEach(g => frag.appendChild(makeCardGrid(g)));
+    if (finalGrid) finalGrid.appendChild(frag);
+
+    const mEl = document.getElementById('gamelistMore');
+    if (data.next && mEl) {
+      mEl.innerHTML = `<button class="load-more-btn" onclick="loadMoreGamelist()">Muat Lebih Banyak</button>`;
+    } else if (mEl) mEl.innerHTML = '';
+  } catch(e) { console.error(e); }
+  gamelistLoading = false;
+}
+
+async function loadMoreGamelist() {
+  gamelistPage++;
+  await loadGamelist(gamelistParams, null, false);
+}
+
+function sortGamelist(ordering, el) {
+  document.querySelectorAll('#gamelistFilter .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  gamelistParams.ordering = ordering;
+  loadGamelist(gamelistParams, null, true);
+}
+
+// ===== CHART =====
+function initChart() {
+  loadChart('week', document.querySelector('.chart-tab.active'));
+}
+
+async function loadChart(period, el) {
+  chartPeriod = period;
+  chartPage = 1;
+  chartLoading = false;
+  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const listEl = document.getElementById('chartList');
+  listEl.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+  let url = `${BASE}/games?key=${API}&page_size=20&ordering=-rating`;
+  if (period === 'week') url += `&dates=${getDateRange(7)}`;
+  if (period === 'month') url += `&dates=${getDateRange(30)}`;
+
+  const data = await apiFetch(url);
+  listEl.innerHTML = '';
+  (data.results || []).forEach((g, i) => listEl.appendChild(makeCardWide(g, i+1)));
+  if (data.next) {
+    const btn = document.createElement('button');
+    btn.className = 'load-more-btn';
+    btn.textContent = 'Muat Lebih Banyak';
+    btn.onclick = () => loadMoreChart();
+    listEl.appendChild(btn);
+  }
+}
+
+async function loadMoreChart() {
+  if (chartLoading) return;
+  chartLoading = true;
+  chartPage++;
+  let url = `${BASE}/games?key=${API}&page=${chartPage}&page_size=20&ordering=-rating`;
+  if (chartPeriod === 'week') url += `&dates=${getDateRange(7)}`;
+  if (chartPeriod === 'month') url += `&dates=${getDateRange(30)}`;
+  const data = await apiFetch(url);
+  const list = document.getElementById('chartList');
+  const existingBtn = list.querySelector('.load-more-btn');
+  const countBefore = list.querySelectorAll('.game-card-wide').length;
+  if (existingBtn) list.removeChild(existingBtn);
+  (data.results || []).forEach((g, i) => list.appendChild(makeCardWide(g, countBefore + i + 1)));
+  if (data.next) {
+    const btn = document.createElement('button');
+    btn.className = 'load-more-btn';
+    btn.textContent = 'Muat Lebih Banyak';
+    btn.onclick = () => loadMoreChart();
+    list.appendChild(btn);
+  }
+  chartLoading = false;
+}
+
+// ===== DETAIL =====
+async function openDetail(id, name) {
+  pushState('detail', {id, name}, name || 'Detail');
+  showView('detail');
+  const el = document.getElementById('viewDetail');
+  el.innerHTML = '<div class="spinner-wrap" style="padding-top:80px"><div class="spinner"></div></div>';
+
+  try {
+    const [game, shots, similar] = await Promise.all([
+      apiFetch(`${BASE}/games/${id}?key=${API}`),
+      apiFetch(`${BASE}/games/${id}/screenshots?key=${API}&page_size=8`),
+      apiFetch(`${BASE}/games/${id}/game-series?key=${API}&page_size=6`)
+    ]);
+
+    const platforms = (game.platforms || []).map(p => p.platform.name);
+    const genres = (game.genres || []).map(g => g.name);
+    const devs = (game.developers || []);
+    const pubs = (game.publishers || []);
+    const metacritic = game.metacritic;
+    const isWishlist = getCollection('wishlist').some(x => x.id == id);
+    const isFav = getCollection('fav').some(x => x.id == id);
+    const isPlaying = getCollection('playing').some(x => x.id == id);
+    const isPlayed = getCollection('played').some(x => x.id == id);
+
+    const ratingBreakdown = game.ratings || [];
+
+    el.innerHTML = `
+      <div class="detail-hero">
+        <div class="detail-hero-bg" style="background-image:url('${game.background_image || ''}')"></div>
+        <div class="detail-hero-gradient"></div>
+        <div class="detail-hero-content">
+          <div class="detail-cover"><img src="${game.background_image || ''}" alt="${game.name}" onload="this.style.opacity=1" style="opacity:0;transition:opacity .3s"></div>
+          <div class="detail-title-wrap">
+            <div class="detail-title">${game.name}</div>
+            <div class="detail-meta-row">
+              ${game.rating ? `<span class="detail-badge db-rating">★ ${game.rating.toFixed(1)}</span>` : ''}
+              ${metacritic ? `<span class="detail-badge" style="background:${metacritic>=75?'#22c55e':metacritic>=50?'#f59e0b':'#ef4444'};color:#000">MC ${metacritic}</span>` : ''}
+              ${game.released ? `<span class="detail-badge db-release">${game.released}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn-action btn-primary" onclick="openGameUrl(${id})"><i class="fa-solid fa-gamepad"></i> Info RAWG</button>
+        <div class="btn-icon-act ${isWishlist?'active-bm':''}" id="btnWishlist" onclick="toggleColl('wishlist',${id},'${escHtml(game.name)}','${game.background_image||''}',this)" title="Wishlist">
+          <i class="fa-${isWishlist?'solid':'regular'} fa-bookmark"></i>
+        </div>
+        <div class="btn-icon-act ${isFav?'active':''}" id="btnFav" onclick="toggleColl('fav',${id},'${escHtml(game.name)}','${game.background_image||''}',this)" title="Favorit">
+          <i class="fa-${isFav?'solid':'regular'} fa-heart"></i>
+        </div>
+      </div>
+
+      <div class="detail-actions" style="border-top:none;padding-top:0">
+        <button class="btn-action btn-secondary ${isPlaying?'':'opacity-60'}" onclick="toggleColl('playing',${id},'${escHtml(game.name)}','${game.background_image||''}',this)" id="btnPlaying">
+          ${isPlaying?'✅ Sedang Main':'▶️ Sedang Main'}
+        </button>
+        <button class="btn-action btn-secondary ${isPlayed?'':'opacity-60'}" onclick="toggleColl('played',${id},'${escHtml(game.name)}','${game.background_image||''}',this)" id="btnPlayed">
+          ${isPlayed?'✅ Sudah Main':'🏁 Sudah Main'}
+        </button>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Sinopsis</div>
+        <div class="detail-desc collapsed" id="detailDesc">${stripHtml(game.description || 'Tidak ada deskripsi.')}</div>
+        <span class="read-more" id="readMoreBtn" onclick="toggleDesc()">Baca selengkapnya</span>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Info</div>
+        <div class="detail-info-grid">
+          <div class="detail-info-item"><div class="detail-info-label">Genre</div><div class="detail-info-value">${genres.join(', ') || '—'}</div></div>
+          <div class="detail-info-item"><div class="detail-info-label">Rating ESRB</div><div class="detail-info-value">${game.esrb_rating?.name || '—'}</div></div>
+          <div class="detail-info-item"><div class="detail-info-label">Developer</div><div class="detail-info-value">${devs.map(d=>`<span onclick="openDeveloper(${d.id},'${escHtml(d.name)}')" style="color:var(--blue3);cursor:pointer">${d.name}</span>`).join(', ') || '—'}</div></div>
+          <div class="detail-info-item"><div class="detail-info-label">Publisher</div><div class="detail-info-value">${pubs.map(p=>p.name).join(', ') || '—'}</div></div>
+          <div class="detail-info-item"><div class="detail-info-label">Rilis</div><div class="detail-info-value">${game.released || '—'}</div></div>
+          <div class="detail-info-item"><div class="detail-info-label">Durasi Main</div><div class="detail-info-value">${game.playtime ? game.playtime + ' jam' : '—'}</div></div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Platform</div>
+        <div class="platform-tags">${platforms.map(p=>`<div class="platform-tag"><i class="fa-solid fa-circle-dot" style="font-size:8px;color:var(--blue3)"></i>${p}</div>`).join('')}</div>
+      </div>
+
+      ${ratingBreakdown.length ? `
+      <div class="detail-section">
+        <div class="detail-section-title">Rating Breakdown</div>
+        ${ratingBreakdown.map(r => `
+          <div class="rating-bar-wrap">
+            <div class="rating-bar-label"><span>${r.title}</span><span>${r.count.toLocaleString()}</span></div>
+            <div class="rating-bar"><div class="rating-bar-fill" style="width:${r.percent}%"></div></div>
+          </div>`).join('')}
+      </div>` : ''}
+
+      ${(shots.results||[]).length ? `
+      <div class="detail-section" style="padding-bottom:8px">
+        <div class="detail-section-title">Screenshot</div>
+      </div>
+      <div class="screenshots-scroll">
+        ${(shots.results||[]).map(s=>`<div class="screenshot-item" onclick="openLightbox('${s.image}')"><img src="${s.image}" onload="this.classList.add('loaded')"></div>`).join('')}
+      </div>
+      <div style="height:16px"></div>` : ''}
+
+      ${(similar.results||[]).length ? `
+      <div class="detail-section" style="padding-bottom:8px">
+        <div class="detail-section-title">Game Seri / Serupa</div>
+      </div>
+      <div class="similar-scroll">
+        ${(similar.results||[]).map(g=>`
+          <div class="game-card-sm" onclick="openDetail(${g.id},'${escHtml(g.name)}')">
+            <div class="cover"><img src="${g.background_image||''}" alt="${g.name}" onload="this.classList.add('loaded')"></div>
+            <div class="name">${g.name}</div>
+            <div class="rating">${g.rating?'★ '+g.rating.toFixed(1):'TBA'}</div>
+          </div>`).join('')}
+      </div>
+      <div style="height:16px"></div>` : ''}
+
+      ${devs.length ? `
+      <div class="detail-section" style="padding-bottom:8px">
+        <div class="detail-section-title">Developer</div>
+        ${devs.map(d=>`
+          <div class="sublist-item" onclick="openDeveloper(${d.id},'${escHtml(d.name)}')" style="padding:12px 0;border-bottom:1px solid var(--border)">
+            <div class="sublist-item-left">
+              <div class="sublist-item-icon">🏢</div>
+              <div><div class="sublist-item-name">${d.name}</div><div class="sublist-item-count">Lihat semua game</div></div>
+            </div>
+            <div class="sublist-item-right"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>`).join('')}
+      </div>` : ''}
+
+      <div style="height:16px"></div>`;
+
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-exclamation"></i><h3>Gagal memuat</h3><p>Coba lagi nanti</p></div>';
+  }
+}
+
+function toggleDesc() {
+  const desc = document.getElementById('detailDesc');
+  const btn = document.getElementById('readMoreBtn');
+  if (desc.classList.contains('collapsed')) {
+    desc.classList.remove('collapsed');
+    btn.textContent = 'Ringkas';
+  } else {
+    desc.classList.add('collapsed');
+    btn.textContent = 'Baca selengkapnya';
+  }
+}
+
+function openGameUrl(id) {
+  window.open(`https://rawg.io/games/${id}`, '_blank');
+}
+
+// ===== DEVELOPER =====
+async function openDeveloper(id, name) {
+  pushState('developer', {id, name}, name);
+  showView('developer');
+  const el = document.getElementById('viewDeveloper');
+  el.innerHTML = '<div class="spinner-wrap" style="padding-top:80px"><div class="spinner"></div></div>';
+  try {
+    const [dev, games] = await Promise.all([
+      apiFetch(`${BASE}/developers/${id}?key=${API}`),
+      apiFetch(`${BASE}/games?key=${API}&developers=${id}&page_size=20&ordering=-rating`)
+    ]);
+    el.innerHTML = `
+      <div class="dev-header">
+        <div class="dev-avatar">🏢</div>
+        <div>
+          <div class="dev-name">${dev.name}</div>
+          <div class="dev-meta">${dev.games_count ? dev.games_count.toLocaleString() + ' game' : ''}</div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">Tentang</div>
+        <div class="detail-desc collapsed" id="devDesc">${stripHtml(dev.description || 'Tidak ada deskripsi.')}</div>
+        <span class="read-more" onclick="toggleDevDesc()">Baca selengkapnya</span>
+      </div>
+      <div class="detail-section" style="padding-bottom:8px"><div class="detail-section-title">Game</div></div>
+      <div class="game-grid">${''}</div>`;
+    const grid = el.querySelector('.game-grid');
+    const frag = document.createDocumentFragment();
+    (games.results || []).forEach(g => frag.appendChild(makeCardGrid(g)));
+    grid.appendChild(frag);
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-exclamation"></i><h3>Gagal memuat</h3></div>';
+  }
+}
+
+function toggleDevDesc() {
+  const d = document.getElementById('devDesc');
+  if (d) d.classList.toggle('collapsed');
+}
+
+// ===== COLLECTION =====
+function initCollection() {
+  renderCollection(collTab);
+}
+
+function switchCollTab(tab, el) {
+  collTab = tab;
+  document.querySelectorAll('.coll-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderCollection(tab);
+}
+
+function renderCollection(tab) {
+  const el = document.getElementById('collContent');
+  const items = getCollection(tab);
+  if (!items.length) {
+    const labels = {wishlist:'Wishlist',playing:'Sedang Main',played:'Sudah Main',fav:'Favorit'};
+    el.innerHTML = `<div class="empty-state"><i class="fa-regular fa-folder-open"></i><h3>${labels[tab]} kosong</h3><p>Tambahkan game dari halaman detail</p></div>`;
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  items.forEach(g => frag.appendChild(makeCardWide(g)));
+  el.innerHTML = '';
+  el.appendChild(frag);
+}
+
+function getCollection(key) {
+  return JSON.parse(localStorage.getItem('amfb_' + key) || '[]');
+}
+
+function toggleColl(key, id, name, img, btnEl) {
+  let items = getCollection(key);
+  const idx = items.findIndex(x => x.id == id);
+  if (idx > -1) {
+    items.splice(idx, 1);
+    showToast('Dihapus dari ' + key);
+  } else {
+    items.push({id, name, background_image: img, rating: null, genres: []});
+    showToast('Ditambahkan ke ' + key);
+  }
+  localStorage.setItem('amfb_' + key, JSON.stringify(items));
+  // Update button UI
+  if (key === 'wishlist') {
+    const inColl = items.some(x => x.id == id);
+    const b = document.getElementById('btnWishlist');
+    if (b) { b.className = 'btn-icon-act' + (inColl ? ' active-bm' : ''); b.innerHTML = `<i class="fa-${inColl?'solid':'regular'} fa-bookmark"></i>`; }
+  }
+  if (key === 'fav') {
+    const inColl = items.some(x => x.id == id);
+    const b = document.getElementById('btnFav');
+    if (b) { b.className = 'btn-icon-act' + (inColl ? ' active' : ''); b.innerHTML = `<i class="fa-${inColl?'solid':'regular'} fa-heart"></i>`; }
+  }
+  if (key === 'playing') {
+    const inColl = items.some(x => x.id == id);
+    const b = document.getElementById('btnPlaying');
+    if (b) b.textContent = inColl ? '✅ Sedang Main' : '▶️ Sedang Main';
+  }
+  if (key === 'played') {
+    const inColl = items.some(x => x.id == id);
+    const b = document.getElementById('btnPlayed');
+    if (b) b.textContent = inColl ? '✅ Sudah Main' : '🏁 Sudah Main';
+  }
+}
+
+function goToChart(period) {
+  switchNav('chart');
+  loadChart(period, document.querySelector('.chart-tab'));
+}
+
+// ===== SEARCH =====
+function openSearch() {
+  document.getElementById('searchOverlay').style.display = 'block';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchInput').focus();
+  history.pushState({search: true}, '');
+  renderRecentSearches();
+}
+
+function closeSearch() {
+  document.getElementById('searchOverlay').style.display = 'none';
+}
+
+function renderRecentSearches() {
+  const el = document.getElementById('searchContent');
+  if (!recentSearches.length) {
+    el.innerHTML = `<div class="search-recent"><div class="search-recent-title">Populer</div>${['The Witcher 3','GTA V','Elden Ring','Cyberpunk 2077','Red Dead Redemption 2','FIFA 24','Minecraft','Hollow Knight'].map(t=>`<span class="recent-chip" onclick="doSearch('${t}')">${t}</span>`).join('')}</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="search-recent">
+    <div class="search-recent-title" style="display:flex;justify-content:space-between">Riwayat <span style="color:var(--blue3);cursor:pointer;font-weight:600" onclick="clearRecent()">Hapus</span></div>
+    ${recentSearches.slice(0,8).map(t=>`<span class="recent-chip" onclick="doSearch('${escHtml(t)}')"><i class="fa-solid fa-clock-rotate-left"></i>${t}</span>`).join('')}
+  </div>`;
+}
+
+function handleSearchInput(e) {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (!q) { renderRecentSearches(); return; }
+  searchTimer = setTimeout(() => doSearch(q, false), 400);
+}
+
+async function doSearch(q, save = true) {
+  document.getElementById('searchInput').value = q;
+  if (save && !recentSearches.includes(q)) {
+    recentSearches.unshift(q);
+    recentSearches = recentSearches.slice(0, 10);
+    localStorage.setItem('amfb_recent', JSON.stringify(recentSearches));
+  }
+  const el = document.getElementById('searchContent');
+  el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  const data = await apiFetch(`${BASE}/games?key=${API}&search=${encodeURIComponent(q)}&page_size=20`);
+  const items = data.results || [];
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><h3>Tidak ditemukan</h3><p>Coba kata kunci lain</p></div>';
+    return;
+  }
+  el.innerHTML = '<div class="game-grid" style="padding:12px 16px"></div>';
+  const grid = el.querySelector('.game-grid');
+  const frag = document.createDocumentFragment();
+  items.forEach(g => {
+    const card = makeCardGrid(g);
+    card.onclick = () => { closeSearch(); openDetail(g.id, g.name); };
+    frag.appendChild(card);
+  });
+  grid.appendChild(frag);
+}
+
+function clearRecent() {
+  recentSearches = [];
+  localStorage.removeItem('amfb_recent');
+  renderRecentSearches();
+}
+
+// ===== LIGHTBOX =====
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').style.display = 'flex';
+  history.pushState({lightbox: true}, '');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ===== UTILS =====
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim();
+}
+function escHtml(s) {
+  return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
