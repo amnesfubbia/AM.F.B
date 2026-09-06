@@ -21,7 +21,7 @@ main{padding:28px 20px}.view{display:none}.view.active{display:block}
 </style></head><body><div class="app">
 <header><div class="brand"><div class="logo">C</div>CallPage</div><div class="actions"><button class="icon" onclick="theme()">◐</button><button class="icon" onclick="show('settings')">⚙</button></div></header>
 <main>
-<section id="home" class="view active"><div class="hero"><div class="eyebrow">Find • Know • Call • Connect</div><h1>Your world,<br>within reach.</h1><p>Direktori modern untuk nomor penting, organisasi, bisnis, tempat, layanan online, panduan, dan pengetahuan.</p><div class="search"><input id="q" placeholder="Search police, hospital, SKCK, business..." onkeydown="if(event.key==='Enter')search()"><button class="primary" onclick="search()">Search</button></div></div><div class="section"><h2>Explore</h2><div class="grid" id="cats"></div></div><div class="section"><h2>Quick access</h2><div class="cards" id="quick"></div></div></section>
+<section id="home" class="view active"><div class="hero"><div class="eyebrow">Find • Know • Call • Connect</div><h1>Your world,<br>within reach.</h1><p>Direktori modern untuk nomor penting, organisasi, bisnis, tempat, layanan online, panduan, dan pengetahuan.</p><div class="search"><input id="q" placeholder="Search police, hospital, SKCK, business..." onkeydown="if(event.key==='Enter')search()"><button class="primary" onclick="search()">Search</button></div></div><div class="section"><h2>Explore</h2><div class="grid" id="cats"></div></div><div class="section"><h2>Quick access</h2><div class="cards" id="quick"></div></div><div class="section"><div class="panel"><h3>Database Engine</h3><p class="muted"><b id="dbCount">0</b> entries · <b id="verifiedCount">0</b> verified · <b id="countryCount">0</b> countries · <b id="categoryCount">0</b> categories</p></div></div></section>
 <section id="search" class="view"><button class="back" onclick="show('home')">← Home</button><h1>Smart Search</h1><p class="muted">Search seluruh database CallPage.</p><div class="search"><input id="q2" placeholder="Search..." oninput="renderResults()"></div><div class="filters"><select id="co" onchange="renderResults()"><option value="">All countries</option></select><select id="ca" onchange="renderResults()"><option value="">All categories</option></select></div><div id="results"></div></section>
 <section id="near" class="view"><button class="back" onclick="show('home')">← Home</button><h1>Near Me</h1><p class="muted">Aktifkan lokasi untuk fitur jarak pada versi produksi.</p><button class="primary" onclick="locate()">Use my location</button><div id="loc" class="section"></div></section>
 <section id="saved" class="view"><button class="back" onclick="show('home')">← Home</button><h1>Saved</h1><div id="savedList" class="cards section"></div></section>
@@ -29,12 +29,134 @@ main{padding:28px 20px}.view{display:none}.view.active{display:block}
 <section id="detail" class="view detail"><button class="back" onclick="back()">← Back</button><div id="detailBody"></div></section>
 </main><nav class="bottom"><button class="nav active" data-v="home" onclick="show('home')">⌂<br>Home</button><button class="nav" data-v="search" onclick="show('search')">⌕<br>Search</button><button class="nav" data-v="near" onclick="show('near')">⌖<br>Near Me</button><button class="nav" data-v="saved" onclick="show('saved')">☆<br>Saved</button><button class="nav" data-v="settings" onclick="show('settings')">⚙<br>Settings</button></nav></div>
 <script>
+const SCHEMA_VERSION="1.0.0";
+const DB_SCHEMA={
+  id:"string", country:"string", region:"string|null", city:"string|null",
+  category:"enum", subcategory:"string|null", type:"string|null",
+  name:"string", localName:"string|null", description:"string",
+  phone:"string[]", email:"string[]", website:"{label,url}[]",
+  address:"string|null", lat:"number|null", lng:"number|null",
+  hours:"object|null", services:"string[]", history:"string[]",
+  structure:"string[]", ranks:"string[]", guides:"string[]",
+  related:"string[]", sources:"{label,url}[]",
+  verificationStatus:"verified|pending|needs_review",
+  lastVerified:"ISO-date|null", updatedAt:"ISO-date"
+};
+
 const DB=[
-{id:'polri110',country:'Indonesia',category:'Important Numbers',subcategory:'Police',name:'Police 110',localName:'Kepolisian Negara Republik Indonesia',description:'Contact center Polri untuk informasi, laporan, dan pengaduan masyarakat.',phone:['110'],website:[['Website Resmi Polri','https://www.polri.go.id/']],address:'Jl. Trunojoyo No. 3, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12110',services:['Police assistance','Information','Reports','Complaints'],history:['Pada 19 Agustus 1945 dibentuk Badan Kepolisian Negara.','Pada 29 September 1945 R.S. Soekanto diangkat sebagai Kepala Kepolisian Negara.','1 Juli 1946 menjadi tonggak ketika kepolisian bertanggung jawab langsung kepada Perdana Menteri.','Pada 1 April 1999 Polri dipisahkan dari ABRI dan menjadi institusi yang berdiri sendiri.'],structure:['Mabes Polri','Polda','Polres','Polsek'],ranks:['Jenderal Polisi','Komisaris Jenderal Polisi','Inspektur Jenderal Polisi','Brigadir Jenderal Polisi','Komisaris Besar Polisi','Ajun Komisaris Besar Polisi','Komisaris Polisi','Ajun Komisaris Polisi','Inspektur Polisi','Brigadir'],guides:['Untuk keadaan darurat kepolisian, gunakan 110.','Untuk layanan administratif, cek kanal resmi Polri terlebih dahulu.'],related:['skck'],sources:[['Website Resmi Polri','https://www.polri.go.id/'],['Call Center 110','https://polri.go.id/kontak/call-center-110']],verified:'Official source'},
-{id:'skck',country:'Indonesia',category:'Online Services',subcategory:'Police Service',name:'SKCK',localName:'Surat Keterangan Catatan Kepolisian',description:'Layanan resmi Polri untuk penerbitan Surat Keterangan Catatan Kepolisian.',phone:[],website:[['Portal SKCK','https://skck.polri.go.id/'],['SKCK Online','https://skck-online.polri.go.id/']],services:['New SKCK','Extension','Application information'],history:['SKCK sebelumnya dikenal sebagai Surat Keterangan Kelakuan Baik (SKKB).'],guides:['Siapkan identitas dan dokumen yang diminta.','Gunakan kanal resmi Polri untuk proses online.','Masa berlaku SKCK sampai 6 bulan sejak diterbitkan.'],related:['polri110'],sources:[['Polri — SKCK','https://polri.go.id/layanan/skck'],['SKCK Online — Polri','https://skck-online.polri.go.id/']],verified:'Official source'},
-{id:'112',country:'Indonesia',category:'Important Numbers',subcategory:'Emergency',name:'Emergency 112',localName:'Layanan Panggilan Darurat 112',description:'Nomor panggilan darurat terintegrasi yang diselenggarakan oleh pemerintah daerah di wilayah yang menerapkannya.',phone:['112'],website:[['Portal Layanan 112','https://layanan112.komdigi.go.id/']],services:['Emergency call','Integrated response'],history:['Program 112 dimulai sejak 2015 untuk menyediakan nomor darurat yang mudah diingat.','Penyelenggaraannya melibatkan pemerintah daerah dan dapat mengintegrasikan pemadam kebakaran, BPBD, kesehatan, polisi, dan instansi terkait.'],guides:['Ketersediaan 112 bergantung pada wilayah yang telah menerapkannya.'],sources:[['Komdigi — Layanan 112','https://layanan112.komdigi.go.id/']],verified:'Official source'},
-{id:'polri',country:'Indonesia',category:'Organizations',subcategory:'Public Safety',name:'Kepolisian Negara Republik Indonesia',localName:'Polri',description:'Institusi kepolisian nasional Republik Indonesia.',phone:['110'],website:[['Website Resmi Polri','https://www.polri.go.id/']],address:'Jl. Trunojoyo No. 3, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12110',services:['Public safety','Police services','Public information','Complaints'],structure:['Mabes Polri','Polda','Polres','Polsek'],related:['polri110','skck'],sources:[['Website Resmi Polri','https://www.polri.go.id/']],verified:'Official source'}
+{
+id:"id-polri-110",country:"Indonesia",region:"DKI Jakarta",city:"Jakarta Selatan",
+category:"Important Numbers",subcategory:"Police",type:"emergency",
+name:"Police 110",localName:"Kepolisian Negara Republik Indonesia",
+description:"Contact center Polri untuk informasi, laporan, dan pengaduan masyarakat.",
+phone:["110"],email:[],website:[{label:"Website Resmi Polri",url:"https://www.polri.go.id/"}],
+address:"Jl. Trunojoyo No. 3, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12110",
+lat:null,lng:null,hours:{type:"24h"},services:["Police assistance","Information","Reports","Complaints"],
+history:["Pada 19 Agustus 1945 dibentuk Badan Kepolisian Negara.","Pada 29 September 1945 R.S. Soekanto diangkat sebagai Kepala Kepolisian Negara.","1 Juli 1946 menjadi tonggak ketika kepolisian bertanggung jawab langsung kepada Perdana Menteri.","Pada 1 April 1999 Polri dipisahkan dari ABRI dan menjadi institusi yang berdiri sendiri."],
+structure:["Mabes Polri","Polda","Polres","Polsek"],
+ranks:["Jenderal Polisi","Komisaris Jenderal Polisi","Inspektur Jenderal Polisi","Brigadir Jenderal Polisi","Komisaris Besar Polisi","Ajun Komisaris Besar Polisi","Komisaris Polisi","Ajun Komisaris Polisi","Inspektur Polisi","Brigadir"],
+guides:["Untuk keadaan darurat kepolisian, gunakan 110.","Untuk layanan administratif, cek kanal resmi Polri terlebih dahulu."],
+related:["id-polri-skck","id-spkt","id-presisi"],
+sources:[{label:"Website Resmi Polri",url:"https://www.polri.go.id/"},{label:"Call Center 110",url:"https://polri.go.id/kontak/call-center-110"}],
+verificationStatus:"verified",lastVerified:"2026-09-05",updatedAt:"2026-09-05"
+},
+{
+id:"id-polri-skck",country:"Indonesia",region:null,city:null,
+category:"Online Services",subcategory:"Police Service",type:"certificate",
+name:"SKCK",localName:"Surat Keterangan Catatan Kepolisian",
+description:"Layanan resmi Polri untuk penerbitan Surat Keterangan Catatan Kepolisian.",
+phone:[],email:[],website:[{label:"Portal SKCK",url:"https://skck.polri.go.id/"},{label:"SKCK Online",url:"https://skck-online.polri.go.id/"}],
+address:null,lat:null,lng:null,hours:null,services:["New SKCK","SKCK extension","Application information"],
+history:["SKCK sebelumnya dikenal sebagai Surat Keterangan Kelakuan Baik (SKKB)."],
+structure:[],ranks:[],
+guides:["Siapkan identitas dan dokumen yang diminta.","Gunakan kanal resmi Polri untuk proses online.","Masa berlaku SKCK sampai 6 bulan sejak diterbitkan."],
+related:["id-polri-110","id-presisi"],
+sources:[{label:"Polri — SKCK",url:"https://polri.go.id/layanan/skck"},{label:"SKCK Online — Polri",url:"https://skck-online.polri.go.id/"}],
+verificationStatus:"verified",lastVerified:"2026-09-05",updatedAt:"2026-09-05"
+},
+{
+id:"id-emergency-112",country:"Indonesia",region:null,city:null,
+category:"Important Numbers",subcategory:"Emergency",type:"emergency",
+name:"Emergency 112",localName:"Layanan Panggilan Darurat 112",
+description:"Nomor panggilan darurat terintegrasi yang diselenggarakan oleh pemerintah daerah di wilayah yang menerapkannya.",
+phone:["112"],email:[],website:[{label:"Portal Layanan 112",url:"https://layanan112.komdigi.go.id/"}],
+address:null,lat:null,lng:null,hours:{type:"24h"},services:["Emergency call","Integrated response"],
+history:["Program 112 dimulai sejak 2015 untuk menyediakan nomor darurat yang mudah diingat.","Penyelenggaraannya melibatkan pemerintah daerah dan dapat mengintegrasikan pemadam kebakaran, BPBD, kesehatan, polisi, dan instansi terkait."],
+structure:[],ranks:[],guides:["Ketersediaan 112 bergantung pada wilayah yang telah menerapkannya."],
+related:["id-polri-110"],sources:[{label:"Komdigi — Layanan 112",url:"https://layanan112.komdigi.go.id/"}],
+verificationStatus:"verified",lastVerified:"2026-09-05",updatedAt:"2026-09-05"
+},
+{
+id:"id-polri",country:"Indonesia",region:"DKI Jakarta",city:"Jakarta Selatan",
+category:"Organizations",subcategory:"Public Safety",type:"government-organization",
+name:"Kepolisian Negara Republik Indonesia",localName:"Polri",
+description:"Institusi kepolisian nasional Republik Indonesia.",
+phone:["110"],email:[],website:[{label:"Website Resmi Polri",url:"https://www.polri.go.id/"}],
+address:"Jl. Trunojoyo No. 3, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12110",
+lat:null,lng:null,hours:null,services:["Public safety","Police services","Public information","Complaints"],
+history:["Polri memiliki sejarah kelembagaan yang panjang, termasuk tonggak pembentukan kepolisian nasional pada 1945 dan pemisahan dari ABRI pada 1999."],
+structure:["Mabes Polri","Polda","Polres","Polsek"],ranks:[],
+guides:["Gunakan kanal resmi untuk layanan dan informasi kepolisian."],
+related:["id-polri-110","id-polri-skck","id-spkt"],
+sources:[{label:"Website Resmi Polri",url:"https://www.polri.go.id/"}],
+verificationStatus:"verified",lastVerified:"2026-09-05",updatedAt:"2026-09-05"
+},
+{
+id:"id-spkt",country:"Indonesia",region:null,city:null,
+category:"Organizations",subcategory:"Police Service",type:"public-service",
+name:"SPKT",localName:"Sentra Pelayanan Kepolisian Terpadu",
+description:"Unit pelayanan kepolisian terpadu untuk laporan, pengaduan, bantuan, pertolongan, dan informasi masyarakat.",
+phone:[],email:[],website:[{label:"Polri — SPKT",url:"https://www.polri.go.id/layanan/spkt/"}],
+address:null,lat:null,lng:null,hours:null,services:["Laporan Polisi","Pengaduan","Informasi","Bantuan dan pertolongan"],
+history:["SPKT merupakan bagian dari pelayanan kepolisian terpadu yang menangani layanan awal masyarakat."],
+structure:[],ranks:[],guides:["Periksa persyaratan dan unit yang berwenang melalui kanal resmi Polri sebelum datang."],
+related:["id-polri-110","id-polri-skck","id-presisi"],
+sources:[{label:"Website Resmi Polri",url:"https://www.polri.go.id/layanan/spkt/"}],
+verificationStatus:"verified",lastVerified:"2026-09-05",updatedAt:"2026-09-05"
+},
+{
+id:"id-presisi",country:"Indonesia",region:null,city:null,
+category:"Online Services",subcategory:"Police Digital Service",type:"digital-service",
+name:"PRESISI Polri",localName:"SuperApp Presisi",
+description:"Platform layanan publik digital Polri yang mengintegrasikan sejumlah layanan kepolisian.",
+phone:[],email:[],website:[{label:"Polri — Aplikasi Presisi",url:"https://www.polri.go.id/kontak/aplikasi-presisi"}],
+address:null,lat:null,lng:null,hours:null,services:["SKCK","SIM","SP2HP","E-Tilang","Pajak Kendaraan","Izin Keramaian","Pengaduan"],
+history:["PRESISI dikembangkan sebagai wadah layanan publik online Polri."],
+structure:[],ranks:[],guides:["Gunakan kanal resmi Polri untuk memastikan aplikasi dan layanan yang digunakan adalah resmi."],
+related:["id-polri-skck","id-spkt","id-polri-110"],
+sources:[{label:"Polri — Aplikasi Presisi",url:"https://www.polri.go.id/kontak/aplikasi-presisi"}],
+verificationStatus:"verified",lastVerified:"2026-09-05",updatedAt:"2026-09-05"
+}
 ];
+
+const CallPageEngine={
+  version:SCHEMA_VERSION,
+  all(){return DB},
+  get(id){return CallPageEngine.get(id)||null},
+  search(query,{country="",category="",region="",verifiedOnly=false}={}){
+    const q=String(query||"").trim().toLowerCase();
+    return DB.filter(d=>{
+      const hay=[d.name,d.localName,d.description,d.category,d.subcategory,d.type,d.country,d.region,d.city,...d.services,...d.history,...d.guides].join(" ").toLowerCase();
+      return (!q||hay.includes(q))&&(!country||d.country===country)&&(!category||d.category===category)&&(!region||d.region===region)&&(!verifiedOnly||d.verificationStatus==="verified");
+    });
+  },
+  byCategory(category){return DB.filter(x=>x.category===category)},
+  byCountry(country){return DB.filter(x=>x.country===country)},
+  related(id){const d=this.get(id);return (d?.related||[]).map(x=>this.get(x)).filter(Boolean)},
+  validate(d){
+    const required=["id","country","category","name","description","phone","website","services","sources","verificationStatus","updatedAt"];
+    const missing=required.filter(k=>d[k]===undefined||d[k]===null);
+    return {valid:missing.length===0,missing};
+  },
+  stats(){
+    return {
+      total:CallPageEngine.stats().total,
+      verified:DB.filter(x=>x.verificationStatus==="verified").length,
+      countries:[...new Set(DB.map(x=>x.country))].length,
+      categories:[...new Set(CallPageEngine.all().map(x=>x.category))].length
+    };
+  }
+};
 const COUNTRIES=['Indonesia','Thailand','Malaysia','Singapore','Japan','South Korea'];
 const CATS=[['Important Numbers','☎','Emergency and essential contacts'],['Organizations','◉','Institutions and organizations'],['Business','▣','Local businesses and services'],['Health','✚','Health places and services'],['Government','⌘','Government institutions and portals'],['Education','▤','Schools and learning'],['Transportation','⇄','Air, rail, road and sea'],['Places','⌖','Useful places around you'],['Online Services','◎','Official websites and portals'],['Guides','☰','Practical step-by-step help'],['Knowledge','◇','History and explanations'],['Updates','↻','Verification and changes']];
 let current='home',prev='home';
@@ -42,20 +164,20 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 function show(v){prev=current;current=v;document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(v).classList.add('active');document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.v===v));if(v==='search')renderResults();if(v==='saved')renderSaved();scrollTo(0,0)}
 function back(){show(prev==='detail'?'home':prev)}
 function card(d){return `<div class="card"><span class="tag">${esc(d.category)}</span><h3>${esc(d.name)}</h3><p>${esc(d.description)}</p><div class="actions"><button onclick="openDetail('${d.id}')">View</button>${d.phone?.[0]?`<a href="tel:${esc(d.phone[0])}">Call</a>`:''}</div></div>`}
-function openDetail(id){const d=DB.find(x=>x.id===id);if(!d)return;prev=current;current='detail';document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('detail').classList.add('active');
+function openDetail(id){const d=CallPageEngine.get(id);if(!d)return;prev=current;current='detail';document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('detail').classList.add('active');
 const list=a=>a?.length?`<ul class="list">${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p class="muted">No data yet.</p>';
-const webs=(d.website||[]).map(w=>`<a href="${w[1]}" target="_blank" rel="noopener">${esc(w[0])}</a>`).join(' ');
-const rel=(d.related||[]).map(id=>DB.find(x=>x.id===id)).filter(Boolean).map(r=>`<div class="source"><button onclick="openDetail('${r.id}')">${esc(r.name)}</button></div>`).join('');
-document.getElementById('detailBody').innerHTML=`<span class="tag">${esc(d.category)} · ${esc(d.subcategory||'')}</span><h1>${esc(d.name)}</h1><p class="muted">${esc(d.localName||'')}</p><div class="detailgrid"><div><div class="panel"><h3>Contact</h3><div class="contact">${d.phone?.length?d.phone.map(p=>`<a href="tel:${esc(p)}">${esc(p)}</a>`).join(' · '):'<span class="muted">No phone listed</span>'}</div><div class="actions">${webs}</div>${d.address?`<p><b>Address</b><br>${esc(d.address)}</p>`:''}</div><div class="panel"><h3>About</h3><p>${esc(d.description)}</p>${(d.services||[]).map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div><div class="panel"><h3>History</h3>${list(d.history)}</div>${d.structure?`<div class="panel"><h3>Structure</h3>${list(d.structure)}</div>`:''}${d.ranks?`<div class="panel"><h3>Ranks</h3>${list(d.ranks)}</div>`:''}<div class="panel"><h3>Guide</h3>${list(d.guides)}</div></div><div><div class="panel"><h3>Save</h3><button class="primary" onclick="save('${d.id}')">☆ Save / Remove</button></div><div class="panel"><h3>Trust</h3><b>${esc(d.verified||'Pending')}</b><p class="muted">Last verified: 2026-09-05</p></div><div class="panel"><h3>Official sources</h3>${(d.sources||[]).map(s=>`<p class="source">• <a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a></p>`).join('')}</div><div class="panel"><h3>Related</h3>${rel||'<span class="muted">No related entries.</span>'}</div></div></div>`;scrollTo(0,0)}
+const webs=(d.website||[]).map(w=>`<a href="${w.url}" target="_blank" rel="noopener">${esc(w.label)}</a>`).join(' ');
+const rel=(d.related||[]).map(id=>CallPageEngine.get(id)).filter(Boolean).map(r=>`<div class="source"><button onclick="openDetail('${r.id}')">${esc(r.name)}</button></div>`).join('');
+document.getElementById('detailBody').innerHTML=`<span class="tag">${esc(d.category)} · ${esc(d.subcategory||'')}</span><h1>${esc(d.name)}</h1><p class="muted">${esc(d.localName||'')}</p><div class="detailgrid"><div><div class="panel"><h3>Contact</h3><div class="contact">${d.phone?.length?d.phone.map(p=>`<a href="tel:${esc(p)}">${esc(p)}</a>`).join(' · '):'<span class="muted">No phone listed</span>'}</div><div class="actions">${webs}</div>${d.address?`<p><b>Address</b><br>${esc(d.address)}</p>`:''}</div><div class="panel"><h3>About</h3><p>${esc(d.description)}</p>${(d.services||[]).map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div><div class="panel"><h3>History</h3>${list(d.history)}</div>${d.structure?`<div class="panel"><h3>Structure</h3>${list(d.structure)}</div>`:''}${d.ranks?`<div class="panel"><h3>Ranks</h3>${list(d.ranks)}</div>`:''}<div class="panel"><h3>Guide</h3>${list(d.guides)}</div></div><div><div class="panel"><h3>Save</h3><button class="primary" onclick="save('${d.id}')">☆ Save / Remove</button></div><div class="panel"><h3>Trust</h3><b>${esc(d.verificationStatus||'pending')}</b><p class="muted">Last verified: 2026-09-05</p></div><div class="panel"><h3>Official sources</h3>${(d.sources||[]).map(s=>`<p class="source">• <a href="${s.url}" target="_blank" rel="noopener">${esc(s.label)}</a></p>`).join('')}</div><div class="panel"><h3>Related</h3>${rel||'<span class="muted">No related entries.</span>'}</div></div></div>`;scrollTo(0,0)}
 function renderCats(){cats.innerHTML=CATS.map(c=>`<button class="cat" onclick="filterCat('${c[0]}')"><div style="font-size:24px">${c[1]}</div><b>${c[0]}</b><small>${c[2]}</small></button>`).join('')}
-function renderQuick(){quick.innerHTML=DB.map(card).join('')}
-function initFilters(){co.innerHTML='<option value="">All countries</option>'+COUNTRIES.map(x=>`<option>${x}</option>`).join('');ca.innerHTML='<option value="">All categories</option>'+[...new Set(DB.map(x=>x.category))].map(x=>`<option>${x}</option>`).join('');region.innerHTML=COUNTRIES.map(x=>`<option>${x}</option>`).join('');region.value=localStorage.cp_region||'Indonesia'}
-function renderResults(){let q=(q2?.value||'').toLowerCase(),c=co?.value||'',a=ca?.value||'';let arr=DB.filter(d=>(!q||JSON.stringify(d).toLowerCase().includes(q))&&(!c||d.country===c)&&(!a||d.category===a));results.innerHTML=arr.length?`<div class="cards">${arr.map(card).join('')}</div>`:'<div class="empty">No entry matches the current search.</div>'}
+function renderQuick(){quick.innerHTML=CallPageEngine.all().map(card).join('')}
+function initFilters(){co.innerHTML='<option value="">All countries</option>'+COUNTRIES.map(x=>`<option>${x}</option>`).join('');ca.innerHTML='<option value="">All categories</option>'+[...new Set(CallPageEngine.all().map(x=>x.category))].map(x=>`<option>${x}</option>`).join('');region.innerHTML=COUNTRIES.map(x=>`<option>${x}</option>`).join('');region.value=localStorage.cp_region||'Indonesia'}
+function renderResults(){let q=(q2?.value||'').toLowerCase(),c=co?.value||'',a=ca?.value||'';let arr=CallPageEngine.search(q,{country:c,category:a});results.innerHTML=arr.length?`<div class="cards">${arr.map(card).join('')}</div>`:'<div class="empty">No entry matches the current search.</div>'}
 function search(){q2.value=q.value;show('search');renderResults()}
 function filterCat(c){show('search');ca.value=c;renderResults()}
 function save(id){let a=JSON.parse(localStorage.cp_saved||'[]');a=a.includes(id)?a.filter(x=>x!==id):[...a,id];localStorage.cp_saved=JSON.stringify(a)}
-function renderSaved(){let a=JSON.parse(localStorage.cp_saved||'[]');let arr=DB.filter(d=>a.includes(d.id));savedList.innerHTML=arr.length?arr.map(card).join(''):'<div class="empty">No saved entries yet.</div>'}
+function renderSaved(){let a=JSON.parse(localStorage.cp_saved||'[]');let arr=CallPageEngine.all().filter(d=>a.includes(d.id));savedList.innerHTML=arr.length?arr.map(card).join(''):'<div class="empty">No saved entries yet.</div>'}
 function theme(){document.body.classList.toggle('dark');localStorage.cp_dark=document.body.classList.contains('dark')?'1':'0'}
 function locate(){if(!navigator.geolocation){loc.innerHTML='<div class="empty">Geolocation unavailable.</div>';return}loc.innerHTML='<p>Requesting location permission…</p>';navigator.geolocation.getCurrentPosition(p=>loc.innerHTML=`<div class="panel"><b>Location available</b><p class="muted">${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}</p></div>`,()=>loc.innerHTML='<div class="empty">Location permission was not granted.</div>')}
-renderCats();renderQuick();initFilters();if(localStorage.cp_dark==='1')document.body.classList.add('dark');
+renderCats();renderQuick();initFilters();const ST=CallPageEngine.stats();dbCount.textContent=ST.total;verifiedCount.textContent=ST.verified;countryCount.textContent=ST.countries;categoryCount.textContent=ST.categories;if(localStorage.cp_dark==='1')document.body.classList.add('dark');
 </script></body></html>
